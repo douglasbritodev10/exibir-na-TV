@@ -60,6 +60,7 @@ function renderizarTabela(lista) {
         `;
     });
 
+    // KPI de Veículos Totais (Placa + Data para ser único)
     const veiculosUnicos = new Set(lista.map(i => i.placa + "_" + i.data)).size;
     document.getElementById('kpiExpedicoes').innerText = lista.length;
     document.getElementById('txtKpiResumo').innerText = `VEÍCULOS: ${veiculosUnicos}`;
@@ -69,15 +70,29 @@ function atualizarGraficos(lista) {
     const sM = {}, vM = {};
     let totalStatus = 0;
 
+    // Criamos um Set para controlar quais veículos já contamos por tipo e por dia
+    // Exemplo de chave: "CARRETA_ABC1234_2023-10-27"
+    const veiculosContados = new Set();
+
     lista.forEach(d => {
+        // Lógica de Status (Continua contando expedições individuais)
         if (d.status) {
             sM[d.status] = (sM[d.status] || 0) + 1;
             totalStatus++;
         }
-        if (d.tipo) vM[d.tipo] = (vM[d.tipo] || 0) + 1;
+
+        // Lógica de Veículos (Contagem Única: Placa + Tipo + Data)
+        if (d.tipo && d.placa && d.data) {
+            const chaveVeiculo = `${d.tipo.toUpperCase()}_${d.placa.toUpperCase()}_${d.data}`;
+            
+            if (!veiculosContados.has(chaveVeiculo)) {
+                vM[d.tipo] = (vM[d.tipo] || 0) + 1;
+                veiculosContados.add(chaveVeiculo);
+            }
+        }
     });
 
-    // --- GRÁFICO DE STATUS (Pizza com Porcentagem na Legenda) ---
+    // --- GRÁFICO DE STATUS ---
     if(cS) cS.destroy();
     const ctxStatus = document.getElementById('chartStatus');
     if (ctxStatus) {
@@ -102,13 +117,13 @@ function atualizarGraficos(lista) {
                         position: 'bottom', 
                         labels: { boxWidth: 12, font: { size: 11, weight: 'bold' }, padding: 8 } 
                     },
-                    datalabels: { display: false } // Limpeza visual na pizza
+                    datalabels: { display: false }
                 }
             }
         });
     }
 
-    // --- GRÁFICO DE VEÍCULOS (Barras com Números Internos Brancos) ---
+    // --- GRÁFICO DE VEÍCULOS (AGORA COM CONTAGEM ÚNICA) ---
     if(cV) cV.destroy();
     const ctxVeic = document.getElementById('chartVeiculos');
     if (ctxVeic) {
@@ -133,7 +148,7 @@ function atualizarGraficos(lista) {
                         display: true,
                         anchor: 'center',
                         align: 'center', 
-                        color: '#ffffff', // Cor branca para contraste
+                        color: '#ffffff',
                         font: { weight: 'bold', size: 18 },
                         formatter: (val) => val
                     }
