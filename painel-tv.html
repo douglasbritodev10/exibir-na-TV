@@ -10,7 +10,6 @@
         :root { 
             --primary: #b71c1c; --secondary: #d32f2f; --bg: #fdf2f2;
             --white: #ffffff;
-            /* Cores de Status que você já usa */
             --finalizado: #1b5e20; --separacao: #e65100; --criado: #0d47a1; 
             --carregamento: #95e9ae; --viagem: #d123a3; --conf-finalizada: #4a148c;
         }
@@ -38,14 +37,13 @@
 
         .main-layout {
             display: grid;
-            grid-template-columns: 75% 25%;
+            grid-template-columns: 74% 25%;
             height: calc(100vh - 65px);
             gap: 15px;
             padding: 15px;
             box-sizing: border-box;
         }
 
-        /* TABELA */
         .table-section {
             background: var(--white);
             border-radius: 10px;
@@ -58,14 +56,13 @@
         .table-header-fixed {
             background: var(--primary);
             display: grid;
-            /* Grid com 7 colunas agora */
-            grid-template-columns: 10% 10% 12% 20% 12% 10% 26%;
+            grid-template-columns: 10% 10% 12% 18% 14% 8% 28%;
             padding: 15px 0;
             font-weight: bold;
             color: white;
             text-transform: uppercase;
             font-size: 13px;
-            text-align: center; /* Centraliza texto do cabeçalho */
+            text-align: center;
         }
 
         #scrollContainer {
@@ -76,59 +73,61 @@
 
         .row {
             display: grid;
-            grid-template-columns: 10% 10% 12% 20% 12% 10% 26%;
+            grid-template-columns: 10% 10% 12% 18% 14% 8% 28%;
             padding: 15px 0;
             border-bottom: 1px solid #eee;
             align-items: center;
             font-size: 15px;
-            text-align: center; /* Centraliza dados das linhas */
+            text-align: center;
             font-weight: bold;
             color: #444;
         }
 
         .row:nth-child(even) { background: #fff8f8; }
 
-        /* PAINEL LATERAL */
-        .side-panel { display: flex; flex-direction: column; gap: 15px; }
+        .side-panel { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            height: 100%;
+        }
 
         .kpi-box {
             background: var(--white);
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             text-align: center;
             border-bottom: 4px solid var(--primary);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .kpi-box span { font-size: 12px; color: #777; font-weight: bold; }
-        .kpi-box h2 { margin: 5px 0 0; font-size: 32px; color: var(--primary); }
+        .kpi-box h2 { margin: 5px 0 0; font-size: 30px; color: var(--primary); }
 
         .chart-card {
             background: var(--white);
             padding: 15px;
             border-radius: 10px;
-            flex-grow: 1;
             display: flex;
             flex-direction: column;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .chart-container { 
-            width: 100%; 
-            height: 280px; /* Aumentado para melhor leitura */
-            position: relative; 
+            min-height: 0;
         }
 
-        /* Ajuste na legenda do gráfico para não cortar */
+        /* Proporções dos Cards */
+        .pizza-size { flex: 1.8; } /* Maior para caber as legendas */
+        .bar-size { flex: 1.2; }   /* Menor para equilibrar */
+
         .chart-card h3 { 
-            font-size: 14px; 
-            margin: 0 0 15px 0; 
+            font-size: 13px; 
+            margin: 0 0 10px 0; 
             color: var(--primary); 
             text-align: center; 
-            border-bottom: 2px solid #eee; 
-            padding-bottom: 8px; 
-            font-weight: 800;
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 5px;
+            font-weight: bold;
         }
 
-        /* BADGES DE STATUS (Igual ao seu relatorio.html) */
+        .chart-container { width: 100%; flex-grow: 1; position: relative; min-height: 0; }
+
         .badge {
             padding: 6px 10px;
             border-radius: 4px;
@@ -143,18 +142,13 @@
         .st-CONFERÊNCIA_FINALIZADA { background: var(--conf-finalizada); }
         .st-CARREGADO_EM_VIAGEM { background: var(--viagem); }
         .st-CRIADO { background: var(--criado); }
-
-        /* Cores Veículos */
-        .v-CARRETA { color: #1b5e20; }
-        .v-TRUCK { color: #03a9f4; }
-        .v-TOCO { color: #fbc02d; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-info">
-        <h1 style="margin:0; font-size: 24px;">EXPEDIÇÃO SIMONETTI</h1>
+        <h1 style="margin:0; font-size: 24px;">EXPEDIÇÃO DO DIA</h1>
         <div class="clock" id="relogio">00:00:00</div>
     </div>
     <div id="txtKpiResumo" style="font-weight: bold; font-size: 18px;">VEÍCULOS: 0</div>
@@ -181,11 +175,11 @@
             <span>Total de Expedições</span>
             <h2 id="kpiExpedicoes">0</h2>
         </div>
-        <div class="chart-card">
+        <div class="chart-card pizza-size">
             <h3>STATUS DAS EXPEDIÇÕES</h3>
             <div class="chart-container"><canvas id="chartStatus"></canvas></div>
         </div>
-        <div class="chart-card">
+        <div class="chart-card bar-size">
             <h3>TIPOS DE VEÍCULOS</h3>
             <div class="chart-container"><canvas id="chartVeiculos"></canvas></div>
         </div>
