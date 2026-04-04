@@ -4,10 +4,18 @@ import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.
 let cS, cV;
 const container = document.getElementById('scrollContainer');
 
+// Definição Central de Cores (Sincronizada com o layout)
 const CORES = { 
-    'CARRETA': '#1b5e20', 'TRUCK': '#03a9f4', 'CARRO 3/4': '#7b1fa2', 'TOCO': '#fbc02d',
-    'FINALIZADO': '#1b5e20', 'EM SEPARAÇÃO': '#e65100', 'CRIADO': '#0d47a1',
-    'EM CARREGAMENTO': '#95e9ae', 'CARREGADO/EM VIAGEM': '#d123a3', 'CONFERÊNCIA FINALIZADA': '#4a148c'
+    'CARRETA': '#1b5e20', 
+    'TRUCK': '#03a9f4', 
+    'CARRO 3/4': '#7b1fa2', 
+    'TOCO': '#fbc02d',
+    'FINALIZADO': '#1b5e20', 
+    'EM SEPARAÇÃO': '#e65100', 
+    'CRIADO': '#0d47a1',
+    'EM CARREGAMENTO': '#95e9ae', 
+    'CARREGADO/EM VIAGEM': '#d123a3', 
+    'CONFERÊNCIA FINALIZADA': '#4a148c'
 };
 
 // Relógio
@@ -15,7 +23,7 @@ setInterval(() => {
     document.getElementById('relogio').innerText = new Date().toLocaleTimeString('pt-BR');
 }, 1000);
 
-// Monitoramento em Tempo Real (Otimizado)
+// Escuta em tempo real (onSnapshot não consome leituras excessivas)
 onSnapshot(collection(db, "expedicoes"), (snap) => {
     const hoje = new Date().toISOString().split('T')[0];
     const amanhaDate = new Date();
@@ -25,7 +33,7 @@ onSnapshot(collection(db, "expedicoes"), (snap) => {
     let dados = snap.docs
         .map(d => d.data())
         .filter(d => d.data === hoje || d.data === amanha)
-        .sort((a, b) => Number(a.codigo) - Number(b.codigo));
+        .sort((a, b) => Number(a.codigo) - Number(b.codigo)); 
 
     renderizarTabela(dados);
     atualizarGraficos(dados);
@@ -38,22 +46,22 @@ function renderizarTabela(lista) {
     lista.forEach(d => {
         const statusLimpo = d.status.toUpperCase().replace(/ /g, "_").replace(/\//g, "_");
         const dataShow = d.data.split('-').reverse().slice(0, 2).join('/');
-        const corVeiculo = CORES[d.tipo.toUpperCase()] || '#333';
+        const corVeiculo = CORES[d.tipo.toUpperCase()] || '#444';
 
         corpo.innerHTML += `
             <div class="row">
                 <div style="color:#999">${dataShow}</div>
-                <div style="color:var(--primary)">${d.codigo}</div>
+                <div style="color:#b71c1c">${d.codigo}</div>
                 <div style="color:#333">${d.placa}</div>
                 <div style="color:${corVeiculo}">${d.tipo}</div>
-                <div style="font-size: 11px; padding: 0 5px; line-height: 1.2;">${d.destino}</div>
+                <div style="font-size: 11px; padding: 0 5px;">${d.destino}</div>
                 <div style="background: #eee; border-radius: 4px; width: 40px; margin: 0 auto;">${d.box}</div>
                 <div><span class="badge st-${statusLimpo}">${d.status}</span></div>
             </div>
         `;
     });
 
-    // Lógica de Veículos Únicos (Placa + Data)
+    // Lógica de Veículos Únicos (Placa + Data para evitar duplicidade)
     const veiculosUnicos = new Set(lista.map(i => i.placa + "_" + i.data)).size;
     
     document.getElementById('kpiExpedicoes').innerText = lista.length;
@@ -68,7 +76,7 @@ function atualizarGraficos(lista) {
         vM[d.tipo] = (vM[d.tipo] || 0) + 1;
     });
 
-    // Gráfico de Status (Pizza) com Porcentagem e Qtd
+    // Gráfico de Status (Pizza)
     if(cS) cS.destroy();
     cS = new Chart(document.getElementById('chartStatus'), {
         type: 'pie',
@@ -83,21 +91,31 @@ function atualizarGraficos(lista) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
-                tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} exp.` } }
+                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                datalabels: { // Exibe porcentagem e valor
+                    color: '#fff',
+                    font: { weight: 'bold' },
+                    formatter: (val, ctx) => {
+                        let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        let p = (val * 100 / sum).toFixed(0) + "%";
+                        return val + " ("+p+")";
+                    }
+                }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 
-    // Gráfico de Veículos (Barras) com Cores Correspondentes
+    // Gráfico de Veículos (Barras) com cores sincronizadas
     if(cV) cV.destroy();
     cV = new Chart(document.getElementById('chartVeiculos'), {
         type: 'bar',
         data: {
             labels: Object.keys(vM),
             datasets: [{ 
+                label: 'Qtd', 
                 data: Object.values(vM), 
-                backgroundColor: Object.keys(vM).map(k => CORES[k.toUpperCase()] || var(--primary))
+                backgroundColor: Object.keys(vM).map(k => CORES[k.toUpperCase()] || '#b71c1c') 
             }]
         },
         options: { 
@@ -105,9 +123,11 @@ function atualizarGraficos(lista) {
             maintainAspectRatio: false,
             scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
             plugins: { 
-                legend: { display: false }
+                legend: { display: false },
+                datalabels: { anchor: 'end', align: 'top', color: '#444', font: { weight: 'bold' } }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 }
 
