@@ -54,7 +54,7 @@ function renderizarTabela(lista) {
                 <div style="color:#333">${d.placa}</div>
                 <div style="color:${corVeiculo}">${d.tipo}</div>
                 <div style="font-size: 11px; padding: 0 5px;">${d.destino}</div>
-                <div style="background: #eee; border-radius: 4px; width: 40px; margin: 0 auto;">${d.box}</div>
+                <div style="background: #eee; border-radius: 4px; width: 35px; margin: 0 auto;">${d.box}</div>
                 <div><span class="badge st-${statusLimpo}">${d.status}</span></div>
             </div>
         `;
@@ -77,18 +77,17 @@ function atualizarGraficos(lista) {
         if (d.tipo) vM[d.tipo] = (vM[d.tipo] || 0) + 1;
     });
 
-    // --- GRÁFICO DE STATUS (Pizza com dados na Legenda) ---
+    // --- GRÁFICO DE STATUS (Pizza com Porcentagem na Legenda) ---
     if(cS) cS.destroy();
     const ctxStatus = document.getElementById('chartStatus');
     if (ctxStatus) {
         cS = new Chart(ctxStatus, {
             type: 'pie',
             data: {
-                // Aqui inserimos a Quantidade e Porcentagem direto no texto da legenda
                 labels: Object.keys(sM).map(key => {
                     const qtd = sM[key];
                     const porc = ((qtd / totalStatus) * 100).toFixed(0);
-                    return `${qtd} (${porc}%) - ${key}`;
+                    return `${qtd} (${porc}%) ${key}`;
                 }),
                 datasets: [{ 
                     data: Object.values(sM), 
@@ -97,24 +96,19 @@ function atualizarGraficos(lista) {
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
                     legend: { 
                         position: 'bottom', 
-                        labels: { 
-                            boxWidth: 12, 
-                            font: { size: 12, weight: 'bold' },
-                            padding: 10
-                        } 
+                        labels: { boxWidth: 12, font: { size: 11, weight: 'bold' }, padding: 8 } 
                     },
-                    datalabels: { display: false } // Desativamos labels sobre a pizza para limpeza visual
+                    datalabels: { display: false } // Limpeza visual na pizza
                 }
             }
         });
     }
 
-    // --- GRÁFICO DE VEÍCULOS (Barras com números internos) ---
+    // --- GRÁFICO DE VEÍCULOS (Barras com Números Internos Brancos) ---
     if(cV) cV.destroy();
     const ctxVeic = document.getElementById('chartVeiculos');
     if (ctxVeic) {
@@ -128,8 +122,7 @@ function atualizarGraficos(lista) {
                 }]
             },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: { 
                     y: { beginAtZero: true, display: false }, 
                     x: { ticks: { font: { weight: 'bold', size: 12 } } }
@@ -140,7 +133,7 @@ function atualizarGraficos(lista) {
                         display: true,
                         anchor: 'center',
                         align: 'center', 
-                        color: '#fff',
+                        color: '#ffffff', // Cor branca para contraste
                         font: { weight: 'bold', size: 18 },
                         formatter: (val) => val
                     }
@@ -151,7 +144,7 @@ function atualizarGraficos(lista) {
     }
 }
 
-// Auto-Scroll
+// Lógica de Scroll Automático
 let scrollPos = 0;
 let direcao = 1;
 function scrollLoop() {
