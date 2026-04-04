@@ -3,139 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAINEL EM TEMPO REAL - SIMONETTI</title>
+    <title>PAINEL DE EXPEDIÇÃO - SIMONETTI</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root { 
-            --primary: #b71c1c; --secondary: #d32f2f; --bg: #121212;
-            --card: #1e1e1e; --text: #ffffff;
-            --finalizado: #2e7d32; --separacao: #ef6c00; --criado: #1565c0; 
-            --carregamento: #66bb6a; --viagem: #9c27b0; --conf-finalizada: #6a1b9a;
+            --primary: #b71c1c; --secondary: #d32f2f; --bg: #fdf2f2;
+            --white: #ffffff;
+            /* Cores de Status que você já usa */
+            --finalizado: #1b5e20; --separacao: #e65100; --criado: #0d47a1; 
+            --carregamento: #95e9ae; --viagem: #d123a3; --conf-finalizada: #4a148c;
         }
         
         body { 
-            font-family: 'Segoe UI', Roboto, sans-serif; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
             background: var(--bg); 
-            color: var(--text); 
             margin: 0; 
-            overflow: hidden; /* Trava o scroll do navegador para usar o interno */
+            overflow: hidden; 
             height: 100vh;
         }
 
         header { 
             background: var(--primary); 
-            padding: 10px 30px; 
+            color: white; 
+            padding: 10px 25px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         }
 
-        .logo-area h1 { margin: 0; font-size: 28px; letter-spacing: 2px; }
-        .clock { font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 8px; }
+        .header-info { display: flex; align-items: center; gap: 20px; }
+        .clock { font-size: 22px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 5px; }
 
         .main-layout {
             display: grid;
-            grid-template-columns: 72% 28%;
-            height: calc(100vh - 70px);
-            gap: 10px;
-            padding: 10px;
+            grid-template-columns: 75% 25%;
+            height: calc(100vh - 65px);
+            gap: 15px;
+            padding: 15px;
+            box-sizing: border-box;
         }
 
-        /* ÁREA DA TABELA COM AUTO-SCROLL */
+        /* TABELA */
         .table-section {
-            background: var(--card);
-            border-radius: 12px;
+            background: var(--white);
+            border-radius: 10px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .table-header-fixed {
-            background: #252525;
+            background: var(--primary);
             display: grid;
-            grid-template-columns: 12% 12% 15% 25% 10% 26%;
-            padding: 15px 5px;
+            /* Grid com 7 colunas agora */
+            grid-template-columns: 10% 10% 12% 20% 12% 10% 26%;
+            padding: 15px 0;
             font-weight: bold;
-            color: var(--secondary);
+            color: white;
             text-transform: uppercase;
-            font-size: 14px;
-            border-bottom: 2px solid #333;
+            font-size: 13px;
+            text-align: center; /* Centraliza texto do cabeçalho */
         }
 
         #scrollContainer {
             flex-grow: 1;
-            overflow-y: hidden; /* Scroll controlado via JS */
+            overflow-y: hidden;
             position: relative;
         }
 
         .row {
             display: grid;
-            grid-template-columns: 12% 12% 15% 25% 10% 26%;
-            padding: 15px 5px;
-            border-bottom: 1px solid #333;
+            grid-template-columns: 10% 10% 12% 20% 12% 10% 26%;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
             align-items: center;
-            font-size: 16px;
+            font-size: 15px;
+            text-align: center; /* Centraliza dados das linhas */
+            font-weight: bold;
+            color: #444;
         }
 
-        .row:nth-child(even) { background: #222; }
+        .row:nth-child(even) { background: #fff8f8; }
 
-        /* LADO DIREITO: DASHBOARD */
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        /* PAINEL LATERAL */
+        .side-panel { display: flex; flex-direction: column; gap: 15px; }
 
         .kpi-box {
-            background: var(--card);
+            background: var(--white);
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 10px;
             text-align: center;
-            border-left: 6px solid var(--secondary);
+            border-bottom: 4px solid var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-
-        .kpi-box span { font-size: 14px; color: #aaa; text-transform: uppercase; }
-        .kpi-box h2 { margin: 5px 0 0; font-size: 36px; color: #fff; }
+        .kpi-box span { font-size: 12px; color: #777; font-weight: bold; }
+        .kpi-box h2 { margin: 5px 0 0; font-size: 32px; color: var(--primary); }
 
         .chart-card {
-            background: var(--card);
+            background: var(--white);
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 10px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+        .chart-card h3 { font-size: 12px; margin: 0 0 10px 0; color: var(--primary); text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .chart-container { width: 100%; height: 220px; position: relative; }
 
-        .chart-card h3 { font-size: 14px; margin: 0 0 10px 0; color: var(--secondary); }
-        .chart-container { width: 100%; height: 250px; position: relative; }
-
-        /* STATUS BADGES */
+        /* BADGES DE STATUS (Igual ao seu relatorio.html) */
         .badge {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 12px;
-            text-align: center;
+            padding: 6px 10px;
+            border-radius: 4px;
+            color: white;
+            font-size: 11px;
             display: inline-block;
+            width: 90%;
         }
         .st-FINALIZADO { background: var(--finalizado); }
         .st-EM_SEPARAÇÃO { background: var(--separacao); }
         .st-EM_CARREGAMENTO { background: var(--carregamento); color: #000; }
         .st-CONFERÊNCIA_FINALIZADA { background: var(--conf-finalizada); }
         .st-CARREGADO_EM_VIAGEM { background: var(--viagem); }
+        .st-CRIADO { background: var(--criado); }
+
+        /* Cores Veículos */
+        .v-CARRETA { color: #1b5e20; }
+        .v-TRUCK { color: #03a9f4; }
+        .v-TOCO { color: #fbc02d; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo-area">
-        <h1>EXPEDIÇÃO SIMONETTI <span style="font-weight: 300; font-size: 18px;">| MONITORAMENTO</span></h1>
+    <div class="header-info">
+        <h1 style="margin:0; font-size: 24px;">EXPEDIÇÃO SIMONETTI</h1>
+        <div class="clock" id="relogio">00:00:00</div>
     </div>
-    <div id="txtResumo" style="font-weight: bold; color: #ffd700;">CARROS: 0 | HOJE E AMANHÃ</div>
-    <div class="clock" id="relogio">00:00:00</div>
+    <div id="txtKpiResumo" style="font-weight: bold; font-size: 18px;">VEÍCULOS: 0</div>
 </header>
 
 <div class="main-layout">
@@ -145,37 +152,27 @@
             <div>EXP</div>
             <div>PLACA</div>
             <div>DESTINO</div>
+            <div>VEÍCULO</div>
             <div>BOX</div>
             <div>STATUS</div>
         </div>
         <div id="scrollContainer">
-            <div id="corpoTabela">
-                </div>
+            <div id="corpoTabela"></div>
         </div>
     </div>
 
     <div class="side-panel">
         <div class="kpi-box">
-            <span>Total de Veículos</span>
+            <span>Veículos no Pátio</span>
             <h2 id="kpiVeiculos">0</h2>
         </div>
-        <div class="kpi-box">
-            <span>Expedições Ativas</span>
-            <h2 id="kpiExp">0</h2>
-        </div>
-
         <div class="chart-card">
-            <h3>DISTRIBUIÇÃO DE STATUS</h3>
-            <div class="chart-container">
-                <canvas id="chartStatus"></canvas>
-            </div>
+            <h3>STATUS DAS EXPEDIÇÕES</h3>
+            <div class="chart-container"><canvas id="chartStatus"></canvas></div>
         </div>
-
         <div class="chart-card">
-            <h3>TIPO DE VEÍCULO</h3>
-            <div class="chart-container">
-                <canvas id="chartVeiculos"></canvas>
-            </div>
+            <h3>TIPOS DE VEÍCULOS</h3>
+            <div class="chart-container"><canvas id="chartVeiculos"></canvas></div>
         </div>
     </div>
 </div>
