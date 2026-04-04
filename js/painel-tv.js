@@ -38,8 +38,8 @@ function renderizarTabela(lista) {
                 <div style="color:#999">${dataShow}</div>
                 <div style="color:var(--primary)">${d.codigo}</div>
                 <div style="color:#333">${d.placa}</div>
-                <div style="font-size: 12px; padding: 0 5px;">${d.destino}</div>
                 <div class="v-${d.tipo.replace(/ /g, "_")}">${d.tipo}</div>
+                <div style="font-size: 12px; padding: 0 5px;">${d.destino}</div>
                 <div style="background: #eee; border-radius: 4px;">${d.box}</div>
                 <div><span class="badge st-${statusLimpo}">${d.status}</span></div>
             </div>
