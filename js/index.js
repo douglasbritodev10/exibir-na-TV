@@ -29,7 +29,7 @@ formLogin.addEventListener('submit', async (e) => {
         const userDoc = await getDoc(doc(db, "usuarios", user.uid));
         
         if (userDoc.exists()) {
-            window.location.href = "menu.html";
+            window.location.href = "painel-tv.html";
         } else {
             // Se o utilizador existe no Auth mas não no Firestore, é o primeiro acesso
             window.location.href = "primeiro-acesso.html";
