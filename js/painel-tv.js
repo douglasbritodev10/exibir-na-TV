@@ -4,78 +4,80 @@ import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.
 let cS, cV;
 const container = document.getElementById('scrollContainer');
 
-// 1. RELÓGIO EM TEMPO REAL
+// Relógio
 setInterval(() => {
     document.getElementById('relogio').innerText = new Date().toLocaleTimeString('pt-BR');
 }, 1000);
 
-// 2. BUSCA DE DADOS (REAL-TIME COM ONSNAPSHOT)
-function iniciarMonitoramento() {
-    onSnapshot(collection(db, "expedicoes"), (snap) => {
-        const agora = new Date();
-        const amanha = new Date();
-        amanha.setDate(agora.getDate() + 1);
+// Monitoramento Real-time
+onSnapshot(collection(db, "expedicoes"), (snap) => {
+    const hoje = new Date().toISOString().split('T')[0];
+    const amanhaDate = new Date();
+    amanhaDate.setDate(amanhaDate.getDate() + 1);
+    const amanha = amanhaDate.toISOString().split('T')[0];
 
-        const strHoje = agora.toISOString().split('T')[0];
-        const strAmanha = amanha.toISOString().split('T')[0];
+    let dados = snap.docs
+        .map(d => d.data())
+        .filter(d => d.data === hoje || d.data === amanha)
+        .sort((a, b) => Number(a.codigo) - Number(b.codigo)); // Ordenação por Nº Expedição
 
-        // Filtra Hoje e Amanhã + Ordenação por Código (Expedição)
-        let dados = snap.docs
-            .map(d => d.data())
-            .filter(d => d.data === strHoje || d.data === strAmanha)
-            .sort((a, b) => Number(a.codigo) - Number(b.codigo));
-
-        renderizarTabela(dados);
-        atualizarGraficos(dados);
-    });
-}
+    renderizarTabela(dados);
+    atualizarGraficos(dados);
+});
 
 function renderizarTabela(lista) {
     const corpo = document.getElementById('corpoTabela');
     corpo.innerHTML = "";
 
     lista.forEach(d => {
-        const stClass = d.status.toUpperCase().replace(/ /g, "_").replace(/\//g, "_");
-        const dataFormatada = d.data.split('-').slice(1).reverse().join('/'); // Ex: 04/04
+        const statusLimpo = d.status.toUpperCase().replace(/ /g, "_").replace(/\//g, "_");
+        const dataShow = d.data.split('-').reverse().slice(0, 2).join('/'); // DD/MM
 
         corpo.innerHTML += `
             <div class="row">
-                <div style="font-weight:bold; color:#888">${dataFormatada}</div>
-                <div style="color: #fff; font-weight: bold;">${d.codigo}</div>
-                <div style="color: #ffd700;">${d.placa}</div>
-                <div style="font-size: 13px;">${d.destino.substring(0, 20)}</div>
-                <div style="font-weight:bold; text-align:center">${d.box}</div>
-                <div><span class="badge st-${stClass}">${d.status}</span></div>
+                <div style="color:#999">${dataShow}</div>
+                <div style="color:var(--primary)">${d.codigo}</div>
+                <div style="color:#333">${d.placa}</div>
+                <div style="font-size: 12px; padding: 0 5px;">${d.destino}</div>
+                <div class="v-${d.tipo.replace(/ /g, "_")}">${d.tipo}</div>
+                <div style="background: #eee; border-radius: 4px;">${d.box}</div>
+                <div><span class="badge st-${statusLimpo}">${d.status}</span></div>
             </div>
         `;
     });
 
-    const veiculosUnicos = new Set(lista.map(i => i.placa + i.data)).size;
-    document.getElementById('kpiVeiculos').innerText = veiculosUnicos;
-    document.getElementById('kpiExp').innerText = lista.length;
+    const totalV = new Set(lista.map(i => i.placa)).size;
+    document.getElementById('kpiVeiculos').innerText = totalV;
+    document.getElementById('txtKpiResumo').innerText = `VEÍCULOS: ${totalV}`;
 }
 
-// 3. EFEITO DE ROLAGEM AUTOMÁTICA (AUTO SCROLL)
+// Lógica de Auto-Scroll suave
 let scrollPos = 0;
-let direcao = 1; // 1 desce, -1 sobe
-
-function autoScroll() {
+let direcao = 1;
+function scrollLoop() {
     if (container.scrollHeight > container.clientHeight) {
-        scrollPos += direcao * 0.5; // Velocidade lenta para TV
+        scrollPos += (0.4 * direcao); // Velocidade
         container.scrollTop = scrollPos;
 
         if (scrollPos >= (container.scrollHeight - container.clientHeight)) {
-            setTimeout(() => { direcao = -1; }, 2000); // Espera 2s no fim
-        } else if (scrollPos <= 0) {
-            setTimeout(() => { direcao = 1; }, 2000); // Espera 2s no topo
+            direcao = 0; 
+            setTimeout(() => { direcao = -1; }, 3000); // Para 3s no fim
+        } else if (scrollPos <= 0 && direcao === -1) {
+            direcao = 0;
+            setTimeout(() => { direcao = 1; }, 3000); // Para 3s no topo
         }
     }
-    requestAnimationFrame(autoScroll);
+    requestAnimationFrame(scrollLoop);
 }
+scrollLoop();
 
-// 4. GRÁFICOS (REUTILIZANDO SUA LÓGICA CORES)
 function atualizarGraficos(lista) {
     const sM = {}, vM = {};
+    const coresStatus = {
+        'FINALIZADO': '#1b5e20', 'EM SEPARAÇÃO': '#e65100', 'CRIADO': '#0d47a1',
+        'EM CARREGAMENTO': '#95e9ae', 'CARREGADO/EM VIAGEM': '#d123a3', 'CONFERÊNCIA FINALIZADA': '#4a148c'
+    };
+
     lista.forEach(d => {
         sM[d.status] = (sM[d.status] || 0) + 1;
         vM[d.tipo] = (vM[d.tipo] || 0) + 1;
@@ -83,15 +85,12 @@ function atualizarGraficos(lista) {
 
     if(cS) cS.destroy();
     cS = new Chart(document.getElementById('chartStatus'), {
-        type: 'doughnut',
+        type: 'pie',
         data: {
             labels: Object.keys(sM),
-            datasets: [{ 
-                data: Object.values(sM), 
-                backgroundColor: ['#2e7d32', '#ef6c00', '#1565c0', '#6a1b9a', '#9c27b0'] 
-            }]
+            datasets: [{ data: Object.values(sM), backgroundColor: Object.keys(sM).map(k => coresStatus[k] || '#ccc') }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
     });
 
     if(cV) cV.destroy();
@@ -99,21 +98,12 @@ function atualizarGraficos(lista) {
         type: 'bar',
         data: {
             labels: Object.keys(vM),
-            datasets: [{ 
-                label: 'Qtd', 
-                data: Object.values(vM), 
-                backgroundColor: '#b71c1c' 
-            }]
+            datasets: [{ label: 'Qtd', data: Object.values(vM), backgroundColor: '#b71c1c' }]
         },
         options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            scales: { y: { beginAtZero: true, ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } },
+            responsive: true, maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } },
             plugins: { legend: { display: false } }
         }
     });
 }
-
-// Inicialização
-iniciarMonitoramento();
-autoScroll();
