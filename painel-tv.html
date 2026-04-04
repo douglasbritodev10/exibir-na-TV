@@ -111,8 +111,22 @@
             flex-direction: column;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .chart-card h3 { font-size: 12px; margin: 0 0 10px 0; color: var(--primary); text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .chart-container { width: 100%; height: 220px; position: relative; }
+        .chart-container { 
+            width: 100%; 
+            height: 280px; /* Aumentado para melhor leitura */
+            position: relative; 
+        }
+
+        /* Ajuste na legenda do gráfico para não cortar */
+        .chart-card h3 { 
+            font-size: 14px; 
+            margin: 0 0 15px 0; 
+            color: var(--primary); 
+            text-align: center; 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 8px; 
+            font-weight: 800;
+        }
 
         /* BADGES DE STATUS (Igual ao seu relatorio.html) */
         .badge {
