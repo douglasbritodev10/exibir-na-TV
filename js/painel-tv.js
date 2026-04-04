@@ -72,6 +72,7 @@ function atualizarGraficos(lista) {
         if (d.tipo) vM[d.tipo] = (vM[d.tipo] || 0) + 1;
     });
 
+    // --- GRÁFICO DE STATUS (Pizza com porcentagem externa) ---
     if(cS) cS.destroy();
     const ctxStatus = document.getElementById('chartStatus');
     if (ctxStatus) {
@@ -81,19 +82,25 @@ function atualizarGraficos(lista) {
                 labels: Object.keys(sM),
                 datasets: [{ 
                     data: Object.values(sM), 
-                    backgroundColor: Object.keys(sM).map(k => CORES[k.toUpperCase()] || '#ccc') 
+                    backgroundColor: Object.keys(sM).map(k => CORES[k.toUpperCase()] || '#ccc'),
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
+                layout: { padding: 30 }, // Espaço para as labels externas
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
                     datalabels: {
-                        color: '#fff', font: { weight: 'bold' },
+                        anchor: 'end',
+                        align: 'end',
+                        offset: 10,
+                        color: '#444',
+                        font: { weight: 'bold', size: 12 },
                         formatter: (val, ctx) => {
                             let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            let p = (val * 100 / sum).toFixed(0) + "%";
-                            return val + " ("+p+")";
+                            let p = (val * 100 / sum).toFixed(1) + "%";
+                            return `${val} (${p})`; // Ex: 5 (25.0%)
                         }
                     }
                 }
@@ -102,6 +109,7 @@ function atualizarGraficos(lista) {
         });
     }
 
+    // --- GRÁFICO DE VEÍCULOS (Barras com números internos) ---
     if(cV) cV.destroy();
     const ctxVeic = document.getElementById('chartVeiculos');
     if (ctxVeic) {
@@ -110,16 +118,25 @@ function atualizarGraficos(lista) {
             data: {
                 labels: Object.keys(vM),
                 datasets: [{ 
-                    label: 'Qtd', data: Object.values(vM), 
+                    data: Object.values(vM), 
                     backgroundColor: Object.keys(vM).map(k => CORES[k.toUpperCase()] || '#b71c1c') 
                 }]
             },
             options: { 
                 responsive: true, maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                scales: { 
+                    y: { beginAtZero: true, display: false }, // Esconde o eixo Y para ganhar espaço
+                    x: { ticks: { font: { weight: 'bold', size: 11 } } }
+                },
                 plugins: { 
                     legend: { display: false },
-                    datalabels: { anchor: 'end', align: 'top', color: '#444', font: { weight: 'bold' } }
+                    datalabels: { 
+                        anchor: 'center', // Coloca no meio da barra
+                        align: 'center', 
+                        color: '#fff',   // Branco para contraste nas cores fortes
+                        font: { weight: 'bold', size: 16 },
+                        formatter: (val) => val
+                    }
                 }
             },
             plugins: [ChartDataLabels]
@@ -127,6 +144,7 @@ function atualizarGraficos(lista) {
     }
 }
 
+// Auto-Scroll
 let scrollPos = 0;
 let direcao = 1;
 function scrollLoop() {
