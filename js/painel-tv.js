@@ -67,45 +67,50 @@ function renderizarTabela(lista) {
 
 function atualizarGraficos(lista) {
     const sM = {}, vM = {};
+    let totalStatus = 0;
+
     lista.forEach(d => {
-        if (d.status) sM[d.status] = (sM[d.status] || 0) + 1;
+        if (d.status) {
+            sM[d.status] = (sM[d.status] || 0) + 1;
+            totalStatus++;
+        }
         if (d.tipo) vM[d.tipo] = (vM[d.tipo] || 0) + 1;
     });
 
-    // --- GRÁFICO DE STATUS (Pizza com porcentagem externa) ---
+    // --- GRÁFICO DE STATUS (Pizza com dados na Legenda) ---
     if(cS) cS.destroy();
     const ctxStatus = document.getElementById('chartStatus');
     if (ctxStatus) {
         cS = new Chart(ctxStatus, {
             type: 'pie',
             data: {
-                labels: Object.keys(sM),
+                // Aqui inserimos a Quantidade e Porcentagem direto no texto da legenda
+                labels: Object.keys(sM).map(key => {
+                    const qtd = sM[key];
+                    const porc = ((qtd / totalStatus) * 100).toFixed(0);
+                    return `${qtd} (${porc}%) - ${key}`;
+                }),
                 datasets: [{ 
                     data: Object.values(sM), 
                     backgroundColor: Object.keys(sM).map(k => CORES[k.toUpperCase()] || '#ccc'),
-                    borderWidth: 2
+                    borderWidth: 1
                 }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false,
-                layout: { padding: 30 }, // Espaço para as labels externas
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        offset: 10,
-                        color: '#444',
-                        font: { weight: 'bold', size: 12 },
-                        formatter: (val, ctx) => {
-                            let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            let p = (val * 100 / sum).toFixed(1) + "%";
-                            return `${val} (${p})`; // Ex: 5 (25.0%)
-                        }
-                    }
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { 
+                            boxWidth: 12, 
+                            font: { size: 12, weight: 'bold' },
+                            padding: 10
+                        } 
+                    },
+                    datalabels: { display: false } // Desativamos labels sobre a pizza para limpeza visual
                 }
-            },
-            plugins: [ChartDataLabels]
+            }
         });
     }
 
@@ -123,18 +128,20 @@ function atualizarGraficos(lista) {
                 }]
             },
             options: { 
-                responsive: true, maintainAspectRatio: false,
+                responsive: true, 
+                maintainAspectRatio: false,
                 scales: { 
-                    y: { beginAtZero: true, display: false }, // Esconde o eixo Y para ganhar espaço
-                    x: { ticks: { font: { weight: 'bold', size: 11 } } }
+                    y: { beginAtZero: true, display: false }, 
+                    x: { ticks: { font: { weight: 'bold', size: 12 } } }
                 },
                 plugins: { 
                     legend: { display: false },
                     datalabels: { 
-                        anchor: 'center', // Coloca no meio da barra
+                        display: true,
+                        anchor: 'center',
                         align: 'center', 
-                        color: '#fff',   // Branco para contraste nas cores fortes
-                        font: { weight: 'bold', size: 16 },
+                        color: '#fff',
+                        font: { weight: 'bold', size: 18 },
                         formatter: (val) => val
                     }
                 }
