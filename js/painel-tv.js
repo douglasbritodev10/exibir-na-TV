@@ -70,29 +70,29 @@ function atualizarGraficos(lista) {
     const sM = {}, vM = {};
     let totalStatus = 0;
 
-    // Criamos um Set para controlar quais veículos já contamos por tipo e por dia
-    // Exemplo de chave: "CARRETA_ABC1234_2023-10-27"
+    // Criamos um Set para controlar quais veículos (Placa + Data) já contamos
     const veiculosContados = new Set();
 
     lista.forEach(d => {
-        // Lógica de Status (Continua contando expedições individuais)
+        // 1. Lógica de Status (Continua contando expedições individuais)
         if (d.status) {
             sM[d.status] = (sM[d.status] || 0) + 1;
             totalStatus++;
         }
 
-        // Lógica de Veículos (Contagem Única: Placa + Tipo + Data)
+        // 2. AJUSTE: Lógica de Veículos (Contagem Única por Placa e Data)
         if (d.tipo && d.placa && d.data) {
-            const chaveVeiculo = `${d.tipo.toUpperCase()}_${d.placa.toUpperCase()}_${d.data}`;
+            const idUnico = `${d.placa.toUpperCase()}_${d.data}`;
             
-            if (!veiculosContados.has(chaveVeiculo)) {
-                vM[d.tipo] = (vM[d.tipo] || 0) + 1;
-                veiculosContados.add(chaveVeiculo);
+            // Se esta placa ainda não foi contada para este dia...
+            if (!veiculosContados.has(idUnico)) {
+                vM[d.tipo] = (vM[d.tipo] || 0) + 1; // Soma 1 ao tipo do veículo
+                veiculosContados.add(idUnico);      // Registra que este veículo já foi contado
             }
         }
     });
 
-    // --- GRÁFICO DE STATUS ---
+    // --- GRÁFICO DE STATUS (PIE) ---
     if(cS) cS.destroy();
     const ctxStatus = document.getElementById('chartStatus');
     if (ctxStatus) {
@@ -123,7 +123,7 @@ function atualizarGraficos(lista) {
         });
     }
 
-    // --- GRÁFICO DE VEÍCULOS (AGORA COM CONTAGEM ÚNICA) ---
+    // --- GRÁFICO DE VEÍCULOS (BAR) - AGORA COM CONTAGEM CORRETA ---
     if(cV) cV.destroy();
     const ctxVeic = document.getElementById('chartVeiculos');
     if (ctxVeic) {
