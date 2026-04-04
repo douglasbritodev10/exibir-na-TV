@@ -4,7 +4,6 @@ import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.
 let cS, cV;
 const container = document.getElementById('scrollContainer');
 
-// Definição Central de Cores (Sincronizada com o layout)
 const CORES = { 
     'CARRETA': '#1b5e20', 
     'TRUCK': '#03a9f4', 
@@ -18,12 +17,11 @@ const CORES = {
     'CONFERÊNCIA FINALIZADA': '#4a148c'
 };
 
-// Relógio
 setInterval(() => {
-    document.getElementById('relogio').innerText = new Date().toLocaleTimeString('pt-BR');
+    const relogio = document.getElementById('relogio');
+    if (relogio) relogio.innerText = new Date().toLocaleTimeString('pt-BR');
 }, 1000);
 
-// Escuta em tempo real (onSnapshot não consome leituras excessivas)
 onSnapshot(collection(db, "expedicoes"), (snap) => {
     const hoje = new Date().toISOString().split('T')[0];
     const amanhaDate = new Date();
@@ -41,12 +39,13 @@ onSnapshot(collection(db, "expedicoes"), (snap) => {
 
 function renderizarTabela(lista) {
     const corpo = document.getElementById('corpoTabela');
+    if (!corpo) return;
     corpo.innerHTML = "";
 
     lista.forEach(d => {
-        const statusLimpo = d.status.toUpperCase().replace(/ /g, "_").replace(/\//g, "_");
-        const dataShow = d.data.split('-').reverse().slice(0, 2).join('/');
-        const corVeiculo = CORES[d.tipo.toUpperCase()] || '#444';
+        const statusLimpo = d.status ? d.status.toUpperCase().replace(/ /g, "_").replace(/\//g, "_") : "";
+        const dataShow = d.data ? d.data.split('-').reverse().slice(0, 2).join('/') : "";
+        const corVeiculo = (d.tipo && CORES[d.tipo.toUpperCase()]) ? CORES[d.tipo.toUpperCase()] : '#444';
 
         corpo.innerHTML += `
             <div class="row">
@@ -61,81 +60,77 @@ function renderizarTabela(lista) {
         `;
     });
 
-    // Lógica de Veículos Únicos (Placa + Data para evitar duplicidade)
     const veiculosUnicos = new Set(lista.map(i => i.placa + "_" + i.data)).size;
-    
     document.getElementById('kpiExpedicoes').innerText = lista.length;
     document.getElementById('txtKpiResumo').innerText = `VEÍCULOS: ${veiculosUnicos}`;
 }
 
 function atualizarGraficos(lista) {
     const sM = {}, vM = {};
-    
     lista.forEach(d => {
-        sM[d.status] = (sM[d.status] || 0) + 1;
-        vM[d.tipo] = (vM[d.tipo] || 0) + 1;
+        if (d.status) sM[d.status] = (sM[d.status] || 0) + 1;
+        if (d.tipo) vM[d.tipo] = (vM[d.tipo] || 0) + 1;
     });
 
-    // Gráfico de Status (Pizza)
     if(cS) cS.destroy();
-    cS = new Chart(document.getElementById('chartStatus'), {
-        type: 'pie',
-        data: {
-            labels: Object.keys(sM),
-            datasets: [{ 
-                data: Object.values(sM), 
-                backgroundColor: Object.keys(sM).map(k => CORES[k.toUpperCase()] || '#ccc') 
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
-                datalabels: { // Exibe porcentagem e valor
-                    color: '#fff',
-                    font: { weight: 'bold' },
-                    formatter: (val, ctx) => {
-                        let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                        let p = (val * 100 / sum).toFixed(0) + "%";
-                        return val + " ("+p+")";
+    const ctxStatus = document.getElementById('chartStatus');
+    if (ctxStatus) {
+        cS = new Chart(ctxStatus, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(sM),
+                datasets: [{ 
+                    data: Object.values(sM), 
+                    backgroundColor: Object.keys(sM).map(k => CORES[k.toUpperCase()] || '#ccc') 
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                    datalabels: {
+                        color: '#fff', font: { weight: 'bold' },
+                        formatter: (val, ctx) => {
+                            let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            let p = (val * 100 / sum).toFixed(0) + "%";
+                            return val + " ("+p+")";
+                        }
                     }
                 }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
 
-    // Gráfico de Veículos (Barras) com cores sincronizadas
     if(cV) cV.destroy();
-    cV = new Chart(document.getElementById('chartVeiculos'), {
-        type: 'bar',
-        data: {
-            labels: Object.keys(vM),
-            datasets: [{ 
-                label: 'Qtd', 
-                data: Object.values(vM), 
-                backgroundColor: Object.keys(vM).map(k => CORES[k.toUpperCase()] || '#b71c1c') 
-            }]
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-            plugins: { 
-                legend: { display: false },
-                datalabels: { anchor: 'end', align: 'top', color: '#444', font: { weight: 'bold' } }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
+    const ctxVeic = document.getElementById('chartVeiculos');
+    if (ctxVeic) {
+        cV = new Chart(ctxVeic, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(vM),
+                datasets: [{ 
+                    label: 'Qtd', data: Object.values(vM), 
+                    backgroundColor: Object.keys(vM).map(k => CORES[k.toUpperCase()] || '#b71c1c') 
+                }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: { anchor: 'end', align: 'top', color: '#444', font: { weight: 'bold' } }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
 }
 
-// Auto-Scroll suave
 let scrollPos = 0;
 let direcao = 1;
 function scrollLoop() {
-    if (container.scrollHeight > container.clientHeight) {
+    if (container && container.scrollHeight > container.clientHeight) {
         scrollPos += (0.4 * direcao);
         container.scrollTop = scrollPos;
         if (scrollPos >= (container.scrollHeight - container.clientHeight)) {
