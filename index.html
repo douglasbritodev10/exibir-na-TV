@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Expedição Simonetti</title>
+    <style>
+        :root { --primary: #d32f2f; --bg-body: #fdf2f2; }
+        body { font-family: sans-serif; background: var(--bg-body); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .logo { color: var(--primary); font-weight: bold; font-size: 20px; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="logo">MÓVEIS SIMONETTI<br><small style="color: #666; font-size: 12px;">EXPEDIÇÃO</small></div>
+    <form id="formLogin">
+        <input type="email" id="email" placeholder="E-mail" required>
+        <input type="password" id="senha" placeholder="Senha" required>
+        <button type="submit" class="btn-login">ENTRAR</button>
+    </form>
+    <p id="msgErro" style="color: red; font-size: 12px; margin-top: 10px;"></p>
+</div>
+
+<script type="module" src="js/index.js"></script>
+</body>
+</html>
