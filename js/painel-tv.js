@@ -23,33 +23,19 @@ setInterval(() => {
 }, 1000);
 
 onSnapshot(collection(db, "expedicoes"), (snap) => {
-    // 1. Pega a data atual no fuso de Brasília
-    const agora = new Date();
-    const dataBrasil = new Intl.DateTimeFormat('pt-BR', {
-        timeZone: 'America/Sao_Paulo',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+    // 1. Pega a data de HOJE e AMANHÃ no formato do banco (YYYY-MM-DD)
+    // Usando 'en-CA' para garantir o formato ISO e o fuso do Brasil
+    const hojeDate = new Date(new Date().toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const hoje = hojeDate.toLocaleDateString('en-CA'); 
 
-    // 2. Formata HOJE como DD/MM/YYYY
-    const hoje = dataBrasil.format(agora);
+    const amanhaDate = new Date(hojeDate);
+    amanhaDate.setDate(hojeDate.getDate() + 1);
+    const amanha = amanhaDate.toLocaleDateString('en-CA');
 
-    // 3. Calcula AMANHÃ
-    const amanhaData = new Date(agora);
-    amanhaData.setDate(agora.getDate() + 1);
-    const amanha = dataBrasil.format(amanhaData);
-
-    console.log("Filtrando para:", hoje, "e", amanha); // Para conferir no F12
-
-    // 4. Filtra os dados
+    // 2. Filtra os dados comparando com o formato do banco (2026-04-05)
     let dados = snap.docs
         .map(d => d.data())
-        .filter(d => {
-            // Garante que estamos comparando strings limpas
-            const dataDoc = d.data ? d.data.trim() : "";
-            return dataDoc === hoje || dataDoc === amanha;
-        })
+        .filter(d => d.data === hoje || d.data === amanha)
         .sort((a, b) => Number(a.codigo) - Number(b.codigo)); 
 
     renderizarTabela(dados);
@@ -63,12 +49,16 @@ function renderizarTabela(lista) {
 
     lista.forEach(d => {
         const statusLimpo = d.status ? d.status.toUpperCase().replace(/ /g, "_").replace(/\//g, "_") : "";
-        const dataShow = d.data ? d.data.split('-').reverse().slice(0, 2).join('/') : "";
+        
+        // --- O PULO DO GATO ESTÁ AQUI ---
+        // Se d.data for "2026-04-05", vira ["2026", "04", "05"] -> reverse() vira ["05", "04", "2026"] -> join('/') vira "05/04/2026"
+        const dataShow = d.data ? d.data.split('-').reverse().join('/') : "";
+        
         const corVeiculo = (d.tipo && CORES[d.tipo.toUpperCase()]) ? CORES[d.tipo.toUpperCase()] : '#444';
 
         corpo.innerHTML += `
             <div class="row">
-                <div style="color:#999">${dataShow}</div>
+                <div style="color:#999; font-weight: bold;">${dataShow}</div>
                 <div style="color:#b71c1c">${d.codigo}</div>
                 <div style="color:#333">${d.placa}</div>
                 <div style="color:${corVeiculo}">${d.tipo}</div>
