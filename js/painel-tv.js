@@ -23,14 +23,33 @@ setInterval(() => {
 }, 1000);
 
 onSnapshot(collection(db, "expedicoes"), (snap) => {
-    const hoje = new Date().toISOString().split('T')[0];
-    const amanhaDate = new Date();
-    amanhaDate.setDate(amanhaDate.getDate() + 1);
-    const amanha = amanhaDate.toISOString().split('T')[0];
+    // 1. Pega a data atual no fuso de Brasília
+    const agora = new Date();
+    const dataBrasil = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
 
+    // 2. Formata HOJE como DD/MM/YYYY
+    const hoje = dataBrasil.format(agora);
+
+    // 3. Calcula AMANHÃ
+    const amanhaData = new Date(agora);
+    amanhaData.setDate(agora.getDate() + 1);
+    const amanha = dataBrasil.format(amanhaData);
+
+    console.log("Filtrando para:", hoje, "e", amanha); // Para conferir no F12
+
+    // 4. Filtra os dados
     let dados = snap.docs
         .map(d => d.data())
-        .filter(d => d.data === hoje || d.data === amanha)
+        .filter(d => {
+            // Garante que estamos comparando strings limpas
+            const dataDoc = d.data ? d.data.trim() : "";
+            return dataDoc === hoje || dataDoc === amanha;
+        })
         .sort((a, b) => Number(a.codigo) - Number(b.codigo)); 
 
     renderizarTabela(dados);
